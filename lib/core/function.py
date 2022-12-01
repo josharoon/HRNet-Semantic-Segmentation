@@ -21,6 +21,8 @@ from utils.utils import get_confusion_matrix
 from utils.utils import adjust_learning_rate
 
 import utils.distributed as dist
+from pathlib import Path
+from PIL import Image
 
 
 def reduce_tensor(inp):
@@ -209,6 +211,17 @@ def testval(config, test_dataset, testloader, model,
     return mean_IoU, IoU_array, pixel_acc, mean_acc
 
 
+def mask_to_image(mask: np.ndarray):
+    if mask.ndim == 2:
+        return Image.fromarray((mask * 255).astype(np.uint8))
+    elif mask.ndim == 3:
+        array = (np.argmax(mask, axis=0)).astype(np.uint8)
+        image = Image.fromarray(array)
+        return image
+
+
+
+
 def test(config, test_dataset, testloader, model,
          sv_dir='', sv_pred=True):
     model.eval()
@@ -234,3 +247,27 @@ def test(config, test_dataset, testloader, model,
                 if not os.path.exists(sv_path):
                     os.mkdir(sv_path)
                 test_dataset.save_pred(pred, sv_path, name)
+
+def getImg(config, test_dataset, testloader, model,saveDir):
+    model.eval()
+    with torch.no_grad():
+        for index, batch in enumerate(tqdm(testloader)):
+            image, label, _, name, *border_padding = batch
+            size = label.size()
+            pred = test_dataset.multi_scale_inference(
+                config,
+                model,
+                image,
+                scales=config.TEST.SCALE_LIST,
+                flip=config.TEST.FLIP_TEST)
+            probs = F.softmax(pred, dim=1)[0]
+            full_mask = probs.cpu()
+            result=F.one_hot(full_mask.argmax(dim=0), 8).permute(2, 0, 1).numpy()
+            out_filename=saveDir.joinpath(name[0]+".png")
+            image=mask_to_image(result)
+            image.save(out_filename)
+
+    return(full_mask)
+
+
+

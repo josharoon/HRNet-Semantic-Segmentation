@@ -33,6 +33,7 @@ from core.function import train, validate
 from utils.modelsummary import get_model_summary
 from utils.utils import create_logger, FullModel
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Train segmentation network')
     
@@ -91,10 +92,11 @@ def main():
         device = torch.device('cuda:{}'.format(args.local_rank))    
         torch.cuda.set_device(device)
         torch.distributed.init_process_group(
-            backend="nccl", init_method="env://",
+            backend="nccl"
         )        
 
     # build model
+    torch.distributed.init_process_group(backend="gloo", init_method="tcp://localhost:23456", rank=0, world_size=1)
     model = eval('models.'+config.MODEL.NAME +
                  '.get_seg_model')(config)
 
@@ -130,6 +132,8 @@ def main():
                         crop_size=crop_size,
                         downsample_rate=config.TRAIN.DOWNSAMPLERATE,
                         scale_factor=config.TRAIN.SCALE_FACTOR)
+
+
 
     train_sampler = get_sampler(train_dataset)
     trainloader = torch.utils.data.DataLoader(
@@ -200,7 +204,8 @@ def main():
         criterion = CrossEntropy(ignore_label=config.TRAIN.IGNORE_LABEL,
                                     weight=train_dataset.class_weights)
 
-    model = FullModel(model, criterion)
+
+    model=FullModel(model,criterion)
     if distributed:
         model = model.to(device)
         model = torch.nn.parallel.DistributedDataParallel(
@@ -210,7 +215,8 @@ def main():
             output_device=args.local_rank
         )
     else:
-        model = nn.DataParallel(model, device_ids=gpus).cuda()
+       # model = model.to(torch.device('cuda:0'))
+        model = nn.DataParallel(model,[torch.device('cuda:0')]).cuda()
     
 
     # optimizer
@@ -282,7 +288,10 @@ def main():
                   config.TRAIN.EXTRA_LR, extra_iters, 
                   extra_trainloader, optimizer, model, writer_dict)
         else:
-            train(config, epoch, config.TRAIN.END_EPOCH, 
+            # model.train(config, epoch, config.TRAIN.END_EPOCH,
+            #        epoch_iters, config.TRAIN.LR, num_iters,
+            #        trainloader, optimizer, model, writer_dict)
+            train(config, epoch, config.TRAIN.END_EPOCH,
                   epoch_iters, config.TRAIN.LR, num_iters,
                   trainloader, optimizer, model, writer_dict)
 
@@ -310,7 +319,7 @@ def main():
     if args.local_rank <= 0:
 
         torch.save(model.module.state_dict(),
-                os.path.join(final_output_dir, 'final_state.pth'))
+                os.path.join(final_output_dir, 'final_state_200epoch.pth'))
 
         writer_dict['writer'].close()
         end = timeit.default_timer()

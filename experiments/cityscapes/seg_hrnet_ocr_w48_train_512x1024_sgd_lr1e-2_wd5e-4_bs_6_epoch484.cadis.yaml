@@ -10,7 +10,7 @@ PRINT_FREQ: 10
 
 DATASET:
   DATASET: cadis
-  ROOT: 'D:\HRNet-Semantic-Segmentation\data\list\cityscapes\'
+  ROOT: 'D:\Pytorch-UNet\data\'
   TEST_SET: 'val.lst'
   TRAIN_SET: 'train.lst'
   NUM_CLASSES: 8
@@ -78,7 +78,7 @@ TRAIN:
   - 480
   - 270
   BASE_SIZE: 960
-  BATCH_SIZE_PER_GPU: 3
+  BATCH_SIZE_PER_GPU: 6
   SHUFFLE: true
   BEGIN_EPOCH: 0
   END_EPOCH: 484
@@ -98,6 +98,6 @@ TEST:
   - 960
   - 540
   BASE_SIZE: 960
-  BATCH_SIZE_PER_GPU: 4
+  BATCH_SIZE_PER_GPU: 8
   FLIP_TEST: false
   MULTI_SCALE: false

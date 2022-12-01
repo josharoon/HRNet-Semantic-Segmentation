@@ -15,23 +15,23 @@ from torch.nn import functional as F
 
 from .base_dataset import BaseDataset
 
-class Cityscapes(BaseDataset):
+class Cadis(BaseDataset):
     def __init__(self, 
                  root, 
                  list_path, 
                  num_samples=None, 
-                 num_classes=19,
+                 num_classes=8,
                  multi_scale=True, 
                  flip=True, 
                  ignore_label=-1, 
                  base_size=960,
-                 crop_size=(512, 1024),
+                 crop_size=(540, 270),
                  downsample_rate=1,
                  scale_factor=16,
                  mean=[0.485, 0.456, 0.406], 
                  std=[0.229, 0.224, 0.225]):
 
-        super(Cityscapes, self).__init__(ignore_label, base_size,
+        super(Cadis, self).__init__(ignore_label, base_size,
                 crop_size, downsample_rate, scale_factor, mean, std,)
 
         self.root = root
@@ -47,23 +47,13 @@ class Cityscapes(BaseDataset):
         if num_samples:
             self.files = self.files[:num_samples]
 
-        self.label_mapping = {-1: ignore_label, 0: ignore_label, 
-                              1: ignore_label, 2: ignore_label, 
-                              3: ignore_label, 4: ignore_label, 
-                              5: ignore_label, 6: ignore_label, 
-                              7: 0, 8: 1, 9: ignore_label, 
-                              10: ignore_label, 11: 2, 12: 3, 
-                              13: 4, 14: ignore_label, 15: ignore_label, 
-                              16: ignore_label, 17: 5, 18: ignore_label, 
-                              19: 6, 20: 7, 21: 8, 22: 9, 23: 10, 24: 11,
-                              25: 12, 26: 13, 27: 14, 28: 15, 
-                              29: ignore_label, 30: ignore_label, 
-                              31: 16, 32: 17, 33: 18}
+        self.label_mapping = {-1: ignore_label, 0: 0,
+                              1: 1, 2: 2,
+                              3: 3, 4: 4,
+                              5: 5, 6: 6,
+                              7: 7}
         self.class_weights = torch.FloatTensor([0.8373, 0.918, 0.866, 1.0345, 
-                                        1.0166, 0.9969, 0.9754, 1.0489,
-                                        0.8786, 1.0023, 0.9539, 0.9843, 
-                                        1.1116, 0.9037, 1.0865, 1.0955, 
-                                        1.0865, 1.1529, 1.0507]).cuda()
+                                        1.0166, 0.9969, 0.9754, 1.0489]).cuda()
     
     def read_files(self):
         files = []
@@ -77,6 +67,7 @@ class Cityscapes(BaseDataset):
                 })
         else:
             for item in self.img_list:
+                #print(item)
                 image_path, label_path = item
                 name = os.path.splitext(os.path.basename(label_path))[0]
                 files.append({

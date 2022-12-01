@@ -6,18 +6,18 @@ GPUS: (0,)
 OUTPUT_DIR: 'output'
 LOG_DIR: 'log'
 WORKERS: 0
-PRINT_FREQ: 10
+PRINT_FREQ: 100
 
 DATASET:
   DATASET: cadis
-  ROOT: 'D:\HRNet-Semantic-Segmentation\data\list\cityscapes\'
+  ROOT: 'D:\Pytorch-UNet\data\'
   TEST_SET: 'val.lst'
   TRAIN_SET: 'train.lst'
   NUM_CLASSES: 8
 MODEL:
-  NAME: seg_hrnet_ocr
-  NUM_OUTPUTS: 2
-  PRETRAINED: ""
+  NAME: seg_hrnet
+  ALIGN_CORNERS: False
+  PRETRAINED: r'D:\HRNet-Semantic-Segmentation\data\pretrained\hrnetv2_w48_imagenet_pretrained.pth'
   EXTRA:
     FINAL_CONV_KERNEL: 1
     STAGE1:
@@ -72,16 +72,15 @@ LOSS:
   USE_OHEM: false
   OHEMTHRES: 0.9
   OHEMKEEP: 131072
-  BALANCE_WEIGHTS: [0.4, 1]
 TRAIN:
   IMAGE_SIZE:
   - 480
   - 270
   BASE_SIZE: 960
-  BATCH_SIZE_PER_GPU: 3
+  BATCH_SIZE_PER_GPU: 6
   SHUFFLE: true
   BEGIN_EPOCH: 0
-  END_EPOCH: 484
+  END_EPOCH: 200
   RESUME: true
   OPTIMIZER: sgd
   LR: 0.01
@@ -95,9 +94,10 @@ TRAIN:
   SCALE_FACTOR: 16
 TEST:
   IMAGE_SIZE:
-  - 960
-  - 540
+  - 480
+  - 270
   BASE_SIZE: 960
-  BATCH_SIZE_PER_GPU: 4
+  BATCH_SIZE_PER_GPU: 8
   FLIP_TEST: false
   MULTI_SCALE: false
+  MODEL_FILE: D:\HRNet-Semantic-Segmentation\tools\output\cadis\seg_hrnet_w48_train_480x270_sgd_lr1e-2_wd5e-4_bs_6_epoch200_cadis_PRETRAINED\best.pth
